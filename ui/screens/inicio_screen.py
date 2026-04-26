@@ -1,8 +1,16 @@
 import ttkbootstrap as tb
+import sys
+
 from ttkbootstrap.constants import *
 from tkinter import ttk
 
 from ui.styles.theme import configure_app_style
+from pathlib import Path
+
+def obtener_ruta_recurso(rel_path):
+    if hasattr(sys, "_MEIPASS"):
+        return Path(sys._MEIPASS) / rel_path
+    return Path(rel_path)
 
 
 class InicioScreen:
@@ -12,6 +20,10 @@ class InicioScreen:
         self.window.title("Disboart - Alu Asistencias")
         self.window.geometry("860x520")
         self.window.resizable(False, False)
+        
+        icon_path = obtener_ruta_recurso("icono.ico")
+        if icon_path.exists():
+            self.window.iconbitmap(str(icon_path))
 
         configure_app_style(self.window)
 

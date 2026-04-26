@@ -33,8 +33,8 @@ class InicioController:
         self.screen.iniciar()
 
     def iniciar_configuracion(self):
-        self.screen.set_estado_mongo("⏳ Intentando conectar a MongoDB...", "muted")
-        self.screen.set_estado_checador("Estado Checador: ⏳ Esperando conexión...", "muted")
+        self.screen.set_estado_mongo(" Intentando conectar a MongoDB...", "muted")
+        self.screen.set_estado_checador("Estado Checador: Esperando conexion...", "muted")
         self.screen.mostrar_progreso_mongo()
 
         Thread(target=self._proceso_configuracion, daemon=True).start()
@@ -72,7 +72,7 @@ class InicioController:
             self.screen.window.after(0, lambda: self.screen.set_busqueda_en_progreso(True))
             self.screen.window.after(
                 0,
-                lambda: self.screen.set_estado_checador("🔎 Buscando checador en red local...", "muted")
+                lambda: self.screen.set_estado_checador(" Buscando checador en red local...", "muted")
             )
 
             def progress(done, total, mensaje):
@@ -92,13 +92,13 @@ class InicioController:
                 if self.stop_event.is_set():
                     self.screen.window.after(
                         0,
-                        lambda: self.screen.set_estado_checador("⛔ Búsqueda cancelada.", "danger")
+                        lambda: self.screen.set_estado_checador("Busqueda cancelada.", "danger")
                     )
                 else:
                     self.screen.window.after(
                         0,
                         lambda: self.screen.set_estado_checador(
-                            "❌ No se encontró ningún checador disponible",
+                            "No se encontro ningun checador disponible",
                             "danger"
                         )
                     )
@@ -110,7 +110,7 @@ class InicioController:
             self.screen.window.after(
                 0,
                 lambda: self.screen.set_estado_checador(
-                    f"✅ Checador detectado en {ip_detectada} ({len(usuarios)} usuarios)",
+                    f"Checador detectado en {ip_detectada} ({len(usuarios)} usuarios)",
                     "success"
                 )
             )
@@ -140,12 +140,12 @@ class InicioController:
                         porcentaje=porcentaje
                     )
 
-                    print("Resultado diálogo auto:", dialogo.resultado)
+                    print("Resultado dialogo auto:", dialogo.resultado)
 
                     if dialogo.resultado == "manual":
                         self._manejar_seleccion_manual_sede()
                     elif dialogo.resultado == "confirmar":
-                        print(f"✅ Sede confirmada automáticamente: {sede_id} - {sede_nombre}")
+                        print(f"Sede confirmada automaticamente: {sede_id} - {sede_nombre}")
 
                         guardar_configuracion(
                             sede_id=sede_id,
@@ -165,7 +165,7 @@ class InicioController:
             self.screen.window.after(0, lambda: self.screen.set_busqueda_en_progreso(False))
             self.screen.window.after(
                 0,
-                lambda: self.screen.set_estado_checador(f"❌ Error en configuración: {e}", "danger")
+                lambda: self.screen.set_estado_checador(f"Error en configuracion: {e}", "danger")
             )
 
     def _manejar_seleccion_manual_sede(self):
@@ -177,14 +177,14 @@ class InicioController:
         )
 
         if dialogo_sede.resultado is None:
-            print("Selección manual cancelada")
+            print("Seleccion manual cancelada")
             return
 
         sede_id = dialogo_sede.resultado
         sede_doc = obtener_sede_por_id(self.cliente_mongo, sede_id)
 
         if not sede_doc:
-            print("No se encontró la sede seleccionada")
+            print("No se encontro la sede seleccionada")
             return
 
         dialogo_password = PasswordDialog(
@@ -194,7 +194,7 @@ class InicioController:
         )
 
         if dialogo_password.resultado is None:
-            print("Validación de contraseña cancelada")
+            print("Validacion de contraseña cancelada")
             return
 
         password_ingresada = dialogo_password.resultado
@@ -203,7 +203,7 @@ class InicioController:
         if password_ingresada == password_real:
             nombre = sede_doc.get("nombre")
 
-            print(f"✅ Sede seleccionada manualmente: {sede_id} - {nombre}")
+            print(f"Sede seleccionada manualmente: {sede_id} - {nombre}")
 
             guardar_configuracion(
                 sede_id=sede_id,
@@ -213,14 +213,14 @@ class InicioController:
             self.screen.window.destroy()
             ir_a_menu()
         else:
-            print("❌ Contraseña incorrecta")
+            print("Contraseña incorrecta")
 
     # =============================
     # Eventos UI
     # =============================
     def cancelar_busqueda(self):
         self.stop_event.set()
-        self.screen.set_estado_checador("⛔ Cancelando búsqueda...", "danger")
+        self.screen.set_estado_checador("Cancelando busqueda...", "danger")
 
     def salir(self):
         self.stop_event.set()
