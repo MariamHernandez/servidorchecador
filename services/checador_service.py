@@ -3,23 +3,110 @@ import time
 from zk import ZK
 
 PUERTO_CHECADOR = 4370
+HOST_INICIO = 1
+HOST_FIN = 254
+
+def obtener_ip_local():
+    """
+    Detecta la dirección IPv4 que está utilizando
+    la computadora en su conexión principal.
+
+    Ejemplo:
+        192.168.1.79
+        10.20.30.75
+    """
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+    try:
+        # No realiza una conexión real.
+        # Windows solamente selecciona la interfaz de red activa.
+        sock.connect(("8.8.8.8", 80))
+
+        ip_local = sock.getsockname()[0]
+
+        if ip_local.startswith("127."):
+            print("[ERROR] Se detectó una dirección local inválida")
+            return None
+
+        if ip_local.startswith("169.254."):
+            print(
+                "[ERROR] La computadora tiene una IP automática "
+                "169.254.X.X y probablemente no está conectada correctamente"
+            )
+            return None
+
+        print(f"[OK] IP de la computadora detectada: {ip_local}")
+        return ip_local
+
+    except OSError as error:
+        print(f"[ERROR] No se pudo detectar la IP local: {error}")
+        return None
+
+    finally:
+        sock.close()
+
+def generar_ips_del_segmento(host_inicio=1, host_fin=254):
+    """
+    Obtiene los primeros tres segmentos de la IP de la computadora
+    y genera las direcciones que se revisarán.
+
+    Ejemplo:
+        IP computadora: 10.20.30.75
+        Genera: 10.20.30.1 hasta 10.20.30.40
+    """
+    ip_computadora = obtener_ip_local()
+
+    if not ip_computadora:
+        return None, []
+
+    partes = ip_computadora.split(".")
+
+    if len(partes) != 4:
+        print(f"[ERROR] La dirección detectada no es válida: {ip_computadora}")
+        return ip_computadora, []
+
+    segmento = ".".join(partes[:3])
+
+    ips_a_probar = []
+
+    for host in range(host_inicio, host_fin + 1):
+        ip = f"{segmento}.{host}"
+
+        # Evita intentar conectarse a la misma computadora.
+        if ip == ip_computadora:
+            continue
+
+        ips_a_probar.append(ip)
+
+    print(f"[INFO] Segmento detectado: {segmento}.X")
+    print(
+        f"[INFO] Rango de búsqueda: "
+        f"{segmento}.{host_inicio} a {segmento}.{host_fin}"
+    )
+
+    return ip_computadora, ips_a_probar
 
 def buscar_checador(progress_callback=None, stop_event=None):
     """
-    Busca el checador en IPs prioritarias y luego en un rango local.
-    Primero intenta conexión real con ZK, porque algunos dispositivos
-    no responden bien al escaneo TCP rápido con socket.
+    Detecta automáticamente la IP de la computadora,
+    obtiene sus primeros tres segmentos y busca el checador
+    dentro del rango configurado.
     """
-    ips_prioritarias = [
-        "192.168.1.101",
-    ]
+    ip_computadora, ips_a_probar = generar_ips_del_segmento(
+        host_inicio=HOST_INICIO,
+        host_fin=HOST_FIN
+    )
 
-    ips_rango = [f"192.168.1.{host}" for host in range(100, 111)]
+    if not ip_computadora:
+        print("[ERROR] No se pudo detectar la red de la computadora")
+        return None, []
 
-    ips_a_probar = []
-    for ip in ips_prioritarias + ips_rango:
-        if ip not in ips_a_probar:
-            ips_a_probar.append(ip)
+    if not ips_a_probar:
+        print("[ERROR] No se pudieron generar direcciones para revisar")
+        return None, []
+
+    print(f"[INFO] IP de esta computadora: {ip_computadora}")
+    print(f"[INFO] Total de direcciones por revisar: {len(ips_a_probar)}")
 
     total = len(ips_a_probar)
 
@@ -29,20 +116,30 @@ def buscar_checador(progress_callback=None, stop_event=None):
             return None, []
 
         mensaje = f"Escaneando {ip}..."
+
         if progress_callback:
             progress_callback(idx, total, mensaje)
 
         print(f"[INFO] Intentando detectar checador en {ip}")
 
+        # Primero intenta una conexión real con la librería ZK.
         usuarios = conectar_checador_y_usuarios(ip)
+
         if usuarios is not None:
             print(f"[OK] Checador encontrado en {ip}")
             return ip, usuarios
 
+        # Prueba auxiliar del puerto 4370.
         if puerto_abierto(ip, PUERTO_CHECADOR, timeout=1.5):
-            print(f"[WARN] El puerto {PUERTO_CHECADOR} respondió en {ip}, pero ZK no logró conectar")
+            print(
+                f"[WARN] El puerto {PUERTO_CHECADOR} respondió en {ip}, "
+                "pero la conexión ZK no fue posible"
+            )
         else:
-            print(f"[INFO] Sin respuesta en puerto {PUERTO_CHECADOR} para {ip}")
+            print(
+                f"[INFO] Sin respuesta en el puerto "
+                f"{PUERTO_CHECADOR} para {ip}"
+            )
 
         time.sleep(0.15)
 

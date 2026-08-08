@@ -1,8 +1,8 @@
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
 
-MONGO_URI = "mongodb+srv://desconexionparcial:LwryVX9pbCjdM8ao@cluster0.7rjoqap.mongodb.net/Registro_Alu?retryWrites=true&w=majority"
-#MONGO_URI = "mongodb+srv://dpalupratic_db_user:24AT1qpZgQAO2Hyt@dbprod.l0mixcb.mongodb.net/"
+#MONGO_URI = "mongodb+srv://desconexionparcial:LwryVX9pbCjdM8ao@cluster0.7rjoqap.mongodb.net/Registro_Alu?retryWrites=true&w=majority"
+MONGO_URI = "mongodb+srv://dpalupratic_db_user:24AT1qpZgQAO2Hyt@dbprod.l0mixcb.mongodb.net/"
 
 def conectar_mongo():
     try:
