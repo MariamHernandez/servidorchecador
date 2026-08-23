@@ -1,3 +1,4 @@
+#checador_service.py
 import socket
 import time
 from zk import ZK

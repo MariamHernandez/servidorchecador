@@ -1,33 +1,3 @@
-"""Publisher-Subscriber pattern implementation for ttkbootstrap.
-
-This module implements a simple publisher-subscriber (pub-sub) pattern used
-for theme change notifications and widget updates throughout ttkbootstrap.
-
-The Publisher class manages subscribers on different channels and broadcasts
-messages to all subscribers when events occur (like theme changes).
-
-Classes:
-    Channel: Enum defining subscriber channels (STD for tk, TTK for ttk)
-    Subscriber: Data class storing subscriber information
-    Publisher: Manages subscriptions and publishes messages to subscribers
-
-Example:
-    ```python
-    from ttkbootstrap.publisher import Publisher, Channel
-
-    # Subscribe a function to theme changes
-    def on_theme_change():
-        print("Theme changed!")
-
-    Publisher.subscribe(
-        func=on_theme_change,
-        channel=Channel.TTK
-    )
-
-    # Publish a message to all TTK subscribers
-    Publisher.publish(Channel.TTK)
-    ```
-"""
 from enum import Enum
 from typing import List
 
@@ -50,8 +20,8 @@ class Channel(Enum):
 
 
 class Subscriber:
-    """A subscriber data class used to store information about a specific
-    subscriber to the `Publisher`."""
+    """A subcriber data class used to store information about a specific
+    subcriber to the `Publisher`."""
 
     def __init__(self, name, func, channel):
         """Create a subscriber.
@@ -73,7 +43,8 @@ class Subscriber:
 
 
 class Publisher:
-    """Publish events to subscribed widgets for theme changes or configuration updates."""
+    """A class used to publish events for widget updates for theme changes
+    or configurations"""
 
     __subscribers = {}
 
@@ -101,7 +72,7 @@ class Publisher:
 
     @staticmethod
     def unsubscribe(name):
-        """Remove a subscriber.
+        """Remove a subscriber
 
         Parameters:
 
@@ -115,7 +86,7 @@ class Publisher:
             pass
 
     def get_subscribers(channel):
-        """Return a list of subscribers.
+        """Return a list of subscribers
 
         Returns:
 
@@ -127,7 +98,7 @@ class Publisher:
         return channel_subs
 
     def publish_message(channel, *args):
-        """Publish a message to all subscribers.
+        """Publish a message to all subscribers
 
         Parameters:
 
@@ -137,7 +108,7 @@ class Publisher:
             **args:
                 optional arguments to pass to the subscribers.
         """
-        subs: list[Subscriber] = Publisher.get_subscribers(channel)
+        subs: List[Subscriber] = Publisher.get_subscribers(channel)
         for sub in subs:
             sub.func(*args)
 
